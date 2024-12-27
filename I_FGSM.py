@@ -23,10 +23,10 @@ def i_fgsm(model, img_tensor, eps, num_iter):
 def main():
     img = download_img()
     img.save('orig.png')
+    img_tensor = process_img(img)
     model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V2)
     model.eval()
     labels = models.ResNet50_Weights.IMAGENET1K_V2.meta['categories']
-    img_tensor = process_img(img)
     adv = i_fgsm(model, img_tensor, 0.02, 15)
     new_class = model(adv).argmax().item()
     new_img = to_array(adv, img.size)

@@ -22,15 +22,17 @@ def fgsm(model, img_tensor, eps):
 
 
 def main():
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     img = download_img()
     img.save('orig.png')
-    model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V2)
+    model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V2).to(device)
     model.eval()
     labels = models.ResNet50_Weights.IMAGENET1K_V2.meta['categories']
-    img_tensor = process_img(img)
+    img_tensor = process_img(img).to(device)
     adv = fgsm(model, img_tensor, 0.02)
     new_class = model(adv).argmax().item()
-    new_img = to_array(adv, img.size)
+    # new_img = to_array(adv.cpu(), img.size)
+    new_img = to_array(adv.cpu())
     plt.title(f'Class: {labels[new_class]}')
     plt.imshow(new_img)
     plt.axis('off')
