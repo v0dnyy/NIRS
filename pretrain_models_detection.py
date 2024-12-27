@@ -56,7 +56,7 @@ def display_results(image, predictions, labels, model_name, threshold=0.5):
 
 
 def main():
-    image_path = 'ya.jpg'
+    image_path = 'images/ya.jpg'
     model_lst = ['F-R-CNN', 'SSDLite', 'SSD', 'RetinaNet']
     for elem in model_lst:
         model, labels = load_model_weights(elem)

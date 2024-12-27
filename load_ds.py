@@ -5,8 +5,7 @@ import torchvision.models as models
 from torch.utils.data import DataLoader, TensorDataset
 
 
-
-def load_data(device, csv_file = 'dataset\labels.csv', img_dir= 'dataset\images', batch_size=1):
+def load_data(device, csv_file='dataset\labels.csv', img_dir='dataset\images', batch_size=1):
     labels_df = pd.read_csv(csv_file)
     labels_df['ImgId'] = labels_df['ImgId'].astype(str).str.zfill(3)
     images = []
@@ -29,14 +28,15 @@ def load_data(device, csv_file = 'dataset\labels.csv', img_dir= 'dataset\images'
 
 
 def main():
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     csv_file = "dataset\labels.csv"
     img_dir = "dataset\images"
-    data_loader = load_data(csv_file=csv_file, img_dir=img_dir, batch_size=32)
-    model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V2)
+    data_loader = load_data(device)
+    model = models.vgg16(weights=models.VGG16_Weights.DEFAULT).to(device)
+    labels = models.VGG16_Weights.DEFAULT.meta['categories']
     model.eval()
-    accuracy = evaluate_model(model, data_loader)
+    accuracy, _ = evaluate_model(model, data_loader)
     print('Точность модели на тестовом наборе: {:.2f} %'.format(accuracy))
-
 
 
 if __name__ == "__main__":

@@ -76,19 +76,19 @@ def main():
     labels = models.VGG16_Weights.DEFAULT.meta['categories']
     model.eval()
     orig_data = load_data(device)
-    plot_five_img_orig(orig_data, "Original Images", labels)
+    # plot_five_img_orig(orig_data, "Original Images", labels)
     acc_list = []
     accuracy = evaluate_model(model, orig_data)[0]
     acc_list.append(accuracy)
     print(f'Точность модели на тестовом наборе: {accuracy:.2f}')
-    # epss = [0.1, 0.2, 0.3]
-    epss = [0.1]
+    epss = [0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3]
     adv_data = apply_fgsm_to_data_loader(model, orig_data, epss, device)
     for eps, adv in zip(epss, adv_data):
-        accuracy, pred = evaluate_model(model, adv)
+        accuracy, pred, change_label_num = evaluate_model(model, adv)
         acc_list.append(accuracy)
         plot_five_img_adv(adv, pred, f"Adv Images(eps = {eps})", labels)
         print(f'Точность модели на тестовом наборе при eps={eps} : {accuracy:.2f}')
+        print(f'Количество изображений, поменявших свой класс: {change_label_num}')
     plot_acc_diff(acc_list,epss)
 
 if __name__ == "__main__":

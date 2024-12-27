@@ -6,6 +6,7 @@ from torchvision.transforms import (Compose, Normalize, Resize, ToTensor)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+
 def evaluate_model(model, data_loader):
     model.eval()
     correct = 0
@@ -21,16 +22,19 @@ def evaluate_model(model, data_loader):
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
     accuracy = (correct / total) * 100 if total > 0 else 0
-    return accuracy, pred_labels
+    return accuracy, pred_labels, total - correct
+
 
 def download_img():
     image_url = 'https://storage.googleapis.com/download.tensorflow.org/example_images/YellowLabradorLooking_new.jpg'
     image = Image.open(requests.get(image_url, stream=True).raw)
     return image
 
+
 def save_img(arr, file_name):
     image = Image.fromarray(arr, mode='RGB')
     image.save(file_name)
+
 
 def process_img(img):
     transform = Compose([Resize((244, 244)),
@@ -41,6 +45,7 @@ def process_img(img):
     tensor = tensor_.unsqueeze(0).to(device)
     return tensor
 
+
 def read_img(path):
     img = Image.open(path).convert('RGB')
     transform = Compose([Resize((244, 244)),
@@ -50,6 +55,7 @@ def read_img(path):
     tensor_ = transform(img)
     tensor = tensor_.unsqueeze(0).to(device)
     return tensor, img.size
+
 
 def to_array(tensor):
     tensor_ = tensor.squeeze().cpu()
