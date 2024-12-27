@@ -14,7 +14,7 @@
 В backbone моделей, приведенных выше, используютя следующие модели классификации:
 - [**ResNet50**](https://pytorch.org/vision/main/models/generated/torchvision.models.resnet50.html#torchvision.models.resnet50) с механизмом Feature Pyramid Network(FPN) для более эффективного извлечения признаков;
 - [**MobileNet V3**](https://pytorch.org/vision/main/models/generated/torchvision.models.mobilenet_v3_large.html#torchvision.models.mobilenet_v3_large);
-- [**VGG-16**](https://pytorch.org/vision/main/models/generated/torchvision.models.vgg16.html#torchvision.models.vgg16)
+- [**VGG-16**](https://pytorch.org/vision/main/models/generated/torchvision.models.vgg16.html#torchvision.models.vgg16).
 
 Было принято решение использовать предобученные на наборе данных [ImageNet](https://image-net.org/index.php) модели классификации, представляющие backbone моделей обнаружения объектов, для проведения исследоваения.
 
