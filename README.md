@@ -108,9 +108,13 @@
 
 #### Метод Быстрого Знака Градиента(FGSM)
 Этот метод был описан в данных статьях:
+
 -[Adversarial attacks in computer vision: a survey](https://link.springer.com/article/10.1007/s41965-024-00142-3)
+
 -[Comprehensive Review on Advanced Adversarial Attack and Defense Strategies in Deep Neural Network](https://rsisinternational.org/journals/ijrias/DigitalLibrary/volume-8-issue-4/156-166.pdf)
+
 -[Fooling deep neural detection networks with adaptive object-oriented adversarial perturbation](https://www.sciencedirect.com/science/article/abs/pii/S003132032100090X?via%3Dihub)
+
 Это классический метод атаки белого ящика, который указывает, что из-за нелинейности глубоких нейронных сетей даже небольшое возмущение, добавленное к входу, достаточно для того, чтобы ввести нейронную сеть в заблуждение при классификации.
 
 Файл [FGSM.py](FGSM.py) содержит функцию fsgm(), являющейся реализацией нецеловой атаки на изображение с помощью метода FGSM.
