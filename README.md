@@ -4,6 +4,7 @@
 
 ### Иследуемые предобученные модели.
 Для анализа использовались модели, предобученные на наборе данных ImageNet, из модуля [torchvision](https://pytorch.org/vision/stable/) библиотеки [PyTorch](https://pytorch.org/).
+
 Для задачи обнаружения объектов в модуле доступны следующие модели:
 - [**Faster R-CNN**](https://pytorch.org/vision/stable/models/faster_rcnn.html);
 - [**RetinaNet**](https://pytorch.org/vision/stable/models/retinanet.html);
