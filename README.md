@@ -263,3 +263,14 @@
   График зависимости точности от параметра epsilon
 
   ![image](images/fgsm/vgg16/acc.png)
+
+#### Итеративный Метод Быстрого Знака Градиента(I-FGSM)
+Этот метод был описан в данной статье:
+
+-[Fooling deep neural detection networks with adaptive object-oriented adversarial perturbation](https://www.sciencedirect.com/science/article/abs/pii/S003132032100090X?via%3Dihub)
+
+Метод I-FGSM (Iterative Fast Gradient Sign Method) является усовершенствованной версией FGSM. В отличие от FGSM, который выполняет одно обновление на основе градиента функции потерь, I-FGSM выполняет несколько шагов, что позволяет более эффективно находить оптимальные искажения
+
+Файл [I_FGSM.py](I_FGSM.py) содержит функцию i_fgsm(), являющейся реализацией нецеловой атаки на изображение с помощью метода FGSM.
+
+Метод был протестирован с различными значениями epsilon: 
