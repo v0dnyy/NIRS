@@ -7,11 +7,11 @@ from utils import save_img, download_img, to_array, process_img
 
 def i_fgsm(model, img_tensor, eps, num_iter):
     adv_img = img_tensor.detach().clone()
-    target_class = model(img_tensor).argmax().item()
+    current_class = model(img_tensor).argmax().item()
     for i in range(num_iter):
         adv_img.requires_grad = True
         logit = model(adv_img)
-        loss = nn.CrossEntropyLoss()(logit,  torch.tensor([target_class], device=img_tensor.device))
+        loss = nn.CrossEntropyLoss()(logit,  torch.tensor([current_class], device=img_tensor.device))
         model.zero_grad()
         loss.backward()
         adv_img.requires_grad = False

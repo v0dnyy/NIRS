@@ -5,13 +5,13 @@ import matplotlib.pyplot as plt
 from utils import save_img, to_array, process_img, download_img
 
 
-def pgd(model, img_tensor, eps, alpha, num_iter):
-    adv_img = img_tensor.detach().clone()
-    target_class = model(img_tensor).argmax().item()
+def pgd(model, img_tensor, eps, alpha, num_iter, device):
+    adv_img = img_tensor.detach().clone().to(device)
+    current_class = model(img_tensor).argmax().item()
     for i in range(num_iter):
         adv_img.requires_grad = True
         logit = model(adv_img)
-        loss = nn.CrossEntropyLoss()(logit, torch.tensor([target_class], device=img_tensor.device))
+        loss = nn.CrossEntropyLoss()(logit, torch.tensor([current_class], device=device))
         model.zero_grad()
         loss.backward()
         adv_img.requires_grad = False
