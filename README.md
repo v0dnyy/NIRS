@@ -368,39 +368,39 @@
   
   Количество изображений, поменявших свой класс: 181
 
-  [image](images/i_fgsm/vgg16/1.png)
+  ![image](images/i_fgsm/vgg16/1.png)
 
   Точность модели на тестовом наборе при epsilon = 0.005 и 10 итерациях: 8.50
 
   Количество изображений, поменявших свой класс: 183
 
-  [image](images/i_fgsm/vgg16/2.png)
+  ![image](images/i_fgsm/vgg16/2.png)
 
   Точность модели на тестовом наборе при epsilon = 0.01 и 10 итерациях: 7.50
 
   Количество изображений, поменявших свой класс: 185
 
-  [image](images/i_fgsm/vgg16/3.png)
+  ![image](images/i_fgsm/vgg16/3.png)
 
   Точность модели на тестовом наборе при epsilon = 0.05 и 10 итерациях: 5.50
 
   Количество изображений, поменявших свой класс: 189
 
-  [image](images/i_fgsm/vgg16/4.png)
+  ![image](images/i_fgsm/vgg16/4.png)
 
   Точность модели на тестовом наборе при epsilon = 0.1 и 10 итерациях: 3.50
 
   Количество изображений, поменявших свой класс: 193
 
-  [image](images/i_fgsm/vgg16/5.png)
+  ![image](images/i_fgsm/vgg16/5.png)
 
   Точность модели на тестовом наборе при epsilon = 0.15 и 10 итерациях: 3.00
 
   Количество изображений, поменявших свой класс: 194
 
-  [image](images/i_fgsm/vgg16/6.png)
+  ![image](images/i_fgsm/vgg16/6.png)
 
   График зависимости точности от параметра epsilon
 
-  [image](images/i_fgsm/vgg16/acc.png)
+  ![image](images/i_fgsm/vgg16/acc.png)
   
