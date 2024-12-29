@@ -21,7 +21,7 @@ def calc_loss(adv_img_np, c, model, img_tensor, target_label, device):
 
 
 def l_bfgs_l(model, c, adv_img_np, img_tensor, iter_num, target_label, device):
-    minimum, maximum = -30, 30  # ????not sure -2 and 2
+    minimum, maximum = -255, 255
     bounds = [(minimum, maximum)] * len(adv_img_np)
     approx_grad_eps = (maximum - minimum) / 100.0
     adv_img_np, f, d = fmin_l_bfgs_b(
@@ -42,7 +42,7 @@ def l_bfgs_l(model, c, adv_img_np, img_tensor, iter_num, target_label, device):
     adv_label = logit.argmax().item()
     is_adversarial = (target_label == adv_label)
 
-    return adv_img, adv_label == target_label, adv_label
+    return adv_img, is_adversarial, adv_label
 
 
 def l_bfgs(model, img_tensor, target_label, eps, num_iter, device):
@@ -76,10 +76,10 @@ def main():
     model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V2).to(device)
     model.eval()
     labels = models.ResNet50_Weights.IMAGENET1K_V2.meta['categories']
-    target_label = 81
+    target_label = 52
     print(f'Target label: {labels[target_label]}')
     img_tensor = process_img(img)
-    adv = l_bfgs(model, img_tensor, target_label, 1, 10, device)
+    adv = l_bfgs(model, img_tensor, target_label, 0.005, 4, device)
     new_class = model(adv).argmax().item()
     new_img = to_array(adv)
     plt.title(f'Class: {labels[new_class]}')

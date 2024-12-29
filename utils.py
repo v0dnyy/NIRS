@@ -2,6 +2,7 @@ from PIL import Image
 import torch
 import numpy as np
 import requests
+import torch.nn.functional as F
 from torchvision.transforms import (Compose, Normalize, Resize, ToTensor)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -12,17 +13,20 @@ def evaluate_model(model, data_loader):
     correct = 0
     total = 0
     pred_labels = []
+    confidences = []
     with torch.no_grad():
         for images, labels in data_loader:
             images = images.to(device)
             labels = labels.to(device)
             outputs = model(images)
+            probabilities = F.softmax(outputs, dim=1)
             _, predicted = torch.max(outputs.data, 1)
             pred_labels.append(predicted.cpu())
+            confidences.append(probabilities.max(dim=1)[0].cpu())
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
     accuracy = (correct / total) * 100 if total > 0 else 0
-    return accuracy, pred_labels, total - correct
+    return accuracy, pred_labels, total - correct, confidences
 
 
 def download_img():
