@@ -1324,3 +1324,17 @@ PGD можно рассматривать как обобщенную верси
     График зависимости точности от параметра epsilon при alpha = 0.15
 
     ![image](images/pgd/vgg16/004/acc.png)
+
+#### **L-BFGS**
+Этот метод был описан в данных статьях:
+
+-[Adversarial Examples: Attacks and Defenses for Deep Learning](https://arxiv.org/abs/1712.07107)
+
+-[Adversarial Attacks and Defenses in Deep Learning](https://www.sciencedirect.com/science/article/pii/S209580991930503X?via%3Dihub)
+
+
+
+Файл [L_BFGS.py](L_BFGS.py) содержит функцию l_bfgs(), являющейся реализацией целевой атаки на изображение с помощью метода L-BFGS.
+
+
+
