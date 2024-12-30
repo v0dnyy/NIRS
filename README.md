@@ -1325,16 +1325,57 @@ PGD можно рассматривать как обобщенную верси
 
     ![image](images/pgd/vgg16/004/acc.png)
 
-#### **L-BFGS**
+#### **Limited-memory Broyden-Fletcher-Goldfarb-Shanno (L-BFGS)**
 Этот метод был описан в данных статьях:
 
 -[Adversarial Examples: Attacks and Defenses for Deep Learning](https://arxiv.org/abs/1712.07107)
 
 -[Adversarial Attacks and Defenses in Deep Learning](https://www.sciencedirect.com/science/article/pii/S209580991930503X?via%3Dihub)
 
-
+Задача атаки формулируется как минимизация комбинированной функции потерь, которая включает два основных компонента: расстояние между оригинальным входом и атакующим примером, а также кросс-энтропийную потерю, используемую в задачах классификации. Для нахождения подходящего значения гиперпараметра c, который регулирует баланс между двумя составляющими функции потерь, используется метод линейного поиска. Этот подход позволяет эффективно исследовать диапазон значений c и находить оптимальное значение, которое обеспечивает наилучший результат атаки.
 
 Файл [L_BFGS.py](L_BFGS.py) содержит функцию l_bfgs(), являющейся реализацией целевой атаки на изображение с помощью метода L-BFGS.
 
+Из-за необходимости больших вычислительных мощностей для атаки метод был протестирован на пяти перавых изображениях из тестового набора данных. Метод был протестирован с различными значениями epsilon: 5, 10, 15, 20, 25 и различном количестве итераций: 5, 10, 15, так как при значениях epsilon больше, чем 25 и количестве итераций больше 15, наличие шума становится отчетливо визуально отличимо.
 
+- **ResNet50**<br>
+  - 5 итераций
+    ![image](images/l_bfgs/resnet50/5/1.png)
 
+    ![image](images/l_bfgs/resnet50/5/2.png)
+
+    ![image](images/l_bfgs/resnet50/5/3.png)
+
+    ![image](images/l_bfgs/resnet50/5/4.png)
+
+    ![image](images/l_bfgs/resnet50/5/5.png)
+
+  - 10 итераций
+    ![image](images/l_bfgs/resnet50/10/1.png)
+
+    ![image](images/l_bfgs/resnet50/10/2.png)
+
+    ![image](images/l_bfgs/resnet50/10/3.png)
+
+    ![image](images/l_bfgs/resnet50/10/4.png)
+
+    ![image](images/l_bfgs/resnet50/10/5.png)
+  - 15 итераций
+    ![image](images/l_bfgs/resnet50/15/1.png)
+
+    ![image](images/l_bfgs/resnet50/15/2.png)
+
+    ![image](images/l_bfgs/resnet50/15/3.png)
+
+    ![image](images/l_bfgs/resnet50/15/4.png)
+
+    ![image](images/l_bfgs/resnet50/15/5.png)
+    
+- **MobileNet V3**<br>
+  - 5 итераций
+  - 10 итераций
+  - 15 итераций
+- **VGG-16**<br>
+  - 5 итераций
+  - 10 итераций
+  - 15 итераций
