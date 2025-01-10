@@ -263,7 +263,7 @@
 #### **Итеративный Метод Быстрого Знака Градиента(I-FGSM)**
 Этот метод был описан в данной статье:
 
--[Fooling deep neural detection networks with adaptive object-oriented adversarial perturbation](https://www.sciencedirect.com/science/article/abs/pii/S003132032100090X?via%3Dihub)
+-[Adversarial examples in the physical world](https://arxiv.org/pdf/1412.6572)
 
 Метод I-FGSM (Iterative Fast Gradient Sign Method) является усовершенствованной версией FGSM. В отличие от FGSM, который выполняет одно обновление на основе градиента функции потерь, I-FGSM выполняет несколько шагов, что позволяет более эффективно находить оптимальные искажения.
 
@@ -401,11 +401,9 @@
   ![image](images/i_fgsm/vgg16/acc.png)
 
 #### **Basic Iterative Method(BIM)**
-Этот метод был описан в данных статьях:
+Этот метод был описан в данной статье:
 
--[Adversarial attacks in computer vision: a survey](https://link.springer.com/article/10.1007/s41965-024-00142-3)
-
--[Adversarial examples in the physical world](https://arxiv.org/abs/1607.02533)
+- [Adversarial examples in the physical world ](https://arxiv.org/pdf/1607.02533)
 
 Метод BIM является расширением метода FGSM (Fast Gradient Sign Method). BIM выполняет FGSM с меньшим шагом и обрезает обновленный состязательный пример в допустимый диапазон на протяжении заданного количества итераций.
 
@@ -798,11 +796,10 @@
 
 
 #### **Projected Gradient Descent(PGD)**
-Этот метод был описан в данных статьях:
+Этот метод был описан в данной статье:
 
--[Adversarial attacks in computer vision: a survey](https://link.springer.com/article/10.1007/s41965-024-00142-3)
+-[Towards deep learning models resistant to adversarial attacks](https://arxiv.org/pdf/1706.06083)
 
--[Adversarial examples in the physical world](https://arxiv.org/abs/1607.02533)
 
 PGD можно рассматривать как обобщенную версию BIM без ограничения αT=ϵ. Для ограничения состязательных возмущений PGD проецирует враждебные образцы, полученные на каждой итерации, в ϵ-L∞  окрестность безобидных образцов. Таким образом, размер состязательного возмущения меньше ϵ. 
 
@@ -1322,11 +1319,10 @@ PGD можно рассматривать как обобщенную верси
     ![image](images/pgd/vgg16/004/acc.png)
 
 #### **Limited-memory Broyden-Fletcher-Goldfarb-Shanno (L-BFGS)**
-Этот метод был описан в данных статьях:
+Этот метод был описан в данной статье:
 
--[Adversarial Examples: Attacks and Defenses for Deep Learning](https://arxiv.org/abs/1712.07107)
+-[Intriguing properties of neural networks](https://arxiv.org/pdf/1312.6199)
 
--[Adversarial Attacks and Defenses in Deep Learning](https://www.sciencedirect.com/science/article/pii/S209580991930503X?via%3Dihub)
 
 Задача атаки формулируется как минимизация комбинированной функции потерь, которая включает два основных компонента: расстояние между оригинальным входом и атакующим примером, а также кросс-энтропийную потерю, используемую в задачах классификации. Для нахождения подходящего значения гиперпараметра c, который регулирует баланс между двумя составляющими функции потерь, используется метод линейного поиска. Этот подход позволяет эффективно исследовать диапазон значений c и находить оптимальное значение, которое обеспечивает наилучший результат атаки.
 
@@ -1522,11 +1518,10 @@ PGD можно рассматривать как обобщенную верси
     ![image](images/l_bfgs/vgg16/15/5.png)
 
 #### **Атака на основе карты значимости Якобиана (JSMA)**
-Этот метод был описан в данных статьях:
+Этот метод был описан в данной статье:
 
--[Adversarial Examples: Attacks and Defenses for Deep Learning](https://arxiv.org/abs/1712.07107)
+-[The Limitations of Deep Learning in Adversarial Settings](https://arxiv.org/pdf/1511.07528)
 
--[Adversarial Attacks and Defenses in Deep Learning](https://www.sciencedirect.com/science/article/pii/S209580991930503X?via%3Dihub)
 
 В данном методе атаки, используя матрицу Якобиана, определяются признаки, которые оказывают наибольшее влияние на выход сети. Это позволяет найти минимальные изменения, которые приведут к изменению классификации. На основе вычисленных значений создается две карты значимости, которые указывают, какие признаки и в какую сторону следует изменять для достижения целевого класса. На каждом шаге итерации выбирается признак, который наибольшим образом влияет на классификацию, и вносится небольшое изменение. Этот процесс повторяется до тех пор, пока не будет достигнута успешная атака или не будет превышено заданное количество итераций.
 
@@ -1536,11 +1531,9 @@ PGD можно рассматривать как обобщенную верси
 
 
 #### **DeepFool атака**
-Этот метод был описан в данных статьях:
+Этот метод был описан в данной статье:
 
--[Adversarial Examples: Attacks and Defenses for Deep Learning](https://arxiv.org/abs/1712.07107)
-
--[Adversarial Attacks and Defenses in Deep Learning](https://www.sciencedirect.com/science/article/pii/S209580991930503X?via%3Dihub)
+-[DeepFool: a simple and accurate method to fool deep neural networks](https://arxiv.org/pdf/1511.04599)
 
 Этот алгоритм подталкивает оригинальное изображение к границе решения, итеративно добавляя возмущения, и как только граница решения пересечена, предыдущие возмущения суммируются и добавляются к оригинальным примерам для формирования состязательных примеров.
 
