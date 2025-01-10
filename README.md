@@ -263,7 +263,7 @@
 #### **Итеративный Метод Быстрого Знака Градиента(I-FGSM)**
 Этот метод был описан в данной статье:
 
--[Adversarial examples in the physical world](https://arxiv.org/pdf/1412.6572)
+-[Adversarial examples in the physical world](https://arxiv.org/pdf/1607.02533)
 
 Метод I-FGSM (Iterative Fast Gradient Sign Method) является усовершенствованной версией FGSM. В отличие от FGSM, который выполняет одно обновление на основе градиента функции потерь, I-FGSM выполняет несколько шагов, что позволяет более эффективно находить оптимальные искажения.
 
