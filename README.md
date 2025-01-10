@@ -109,7 +109,7 @@
 #### Метод Быстрого Знака Градиента(FGSM)
 Этот метод был описан в данной статье:
 
-- [Explaining and Harnessing Adversarial Examples](articles/Explaining and Harnessing Adversarial Examples (2015).pdf)
+- [Explaining and Harnessing Adversarial Examples](https://arxiv.org/pdf/1412.6572)
 
 Это классический метод атаки белого ящика, который указывает, что из-за нелинейности глубоких нейронных сетей даже небольшое возмущение, добавленное к входу, достаточно для того, чтобы ввести нейронную сеть в заблуждение при классификации.
 
