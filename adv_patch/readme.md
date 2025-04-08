@@ -12,5 +12,7 @@
 
 - **Реализация атаки уклонения от системы распознования лиц**<br>
 - **Реализация атаки уклонения от системы распознования людей**<br>
+  [Fooling automated surveillance cameras: adversarial patches to attack person detection](https://arxiv.org/pdf/1904.08653)
+
 - **Реализация универсальных атак уклонения**<br>
   [Adversarial Patch](https://arxiv.org/pdf/1712.09665)
