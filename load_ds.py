@@ -29,7 +29,7 @@ def load_data(device, csv_file='dataset\labels.csv', img_dir='dataset\images', b
     return data_loader
 
 
-def load_train_teat_data(device, csv_file=r'dataset/labels.csv', img_dir='dataset/images', batch_size=16, test_size=0.2):
+def load_train_teat_data(device, csv_file=r'dataset/labels.csv', img_dir='dataset/images', batch_size=1, test_size=0.5):
     labels_df = pd.read_csv(csv_file)
     labels_df['ImgId'] = labels_df['ImgId'].astype(str).str.zfill(3)
     images = []

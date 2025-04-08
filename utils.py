@@ -41,7 +41,7 @@ def save_img(arr, file_name):
 
 
 def process_img(img):
-    transform = Compose([Resize((244, 244)),
+    transform = Compose([Resize((224, 224)),
                          ToTensor(),
                          Normalize(mean=[0.485, 0.456, 0.406],
                                    std=[0.229, 0.224, 0.225])])
@@ -52,7 +52,7 @@ def process_img(img):
 
 def read_img(path):
     img = Image.open(path).convert('RGB')
-    transform = Compose([Resize((244, 244)),
+    transform = Compose([Resize((224, 224)),
                          ToTensor(),
                          Normalize(mean=[0.485, 0.456, 0.406],
                                    std=[0.229, 0.224, 0.225])])
@@ -62,7 +62,7 @@ def read_img(path):
 
 
 def to_array(tensor):
-    tensor_ = tensor.squeeze().cpu()
+    tensor_ = tensor.squeeze(0).cpu()
     unnormalize_transform = Compose([Normalize(mean=[-0.485 / 0.229, -0.456 / 0.224, -0.406 / 0.225],
                                                std=[1 / 0.229, 1 / 0.224, 1 / 0.225]),
                                      ])
