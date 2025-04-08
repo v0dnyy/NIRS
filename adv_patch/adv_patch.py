@@ -128,7 +128,7 @@ def main():
     target_label = 55
     train_loader, test_loader = load_train_teat_data(device, r'../dataset/labels.csv', r'../dataset/images')
     # accuracy, pred_labels, false_pred, confidences = evaluate_model(model, test_loader)
-    patch = init_patch('rectangle', image_size=(3, 224, 224), noise_percentage=0.04)
+    patch = init_patch('rectangle', image_size=(3, 224, 224), noise_percentage=0.035)
     applied_patch, mask, x_location, y_location = mask_generation('rectangle', patch, img.shape[1:])
     perturbated_image, applied_patch, perturbated_image_t = patch_attack(device, img, applied_patch, mask, target_label,
                                                                          0.95, model,
