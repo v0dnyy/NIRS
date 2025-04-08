@@ -13,13 +13,20 @@
 - **Реализация атаки уклонения от системы распознования лиц**<br>
 
   [Adversarial Mask: Real-World Universal Adversarial Attack on Face Recognition Models](https://arxiv.org/pdf/2111.10759)
-  
+
+  [Accessorize to a Crime: Real and Stealthy Attacks on State-of-the-Art Face Recognition](https://dl.acm.org/doi/pdf/10.1145/2976749.2978392)
+
+  [ADVHAT: REAL-WORLD ADVERSARIAL ATTACK ON ARCFACE FACE ID SYSTEM](https://arxiv.org/pdf/1908.08705)
+
+  [A General Framework for Adversarial Examples with Objectives](https://dl.acm.org/doi/pdf/10.1145/3317611)
 
 - **Реализация атаки уклонения от системы распознования людей**<br>
 
   [Fooling automated surveillance cameras: adversarial patches to attack person detection](https://arxiv.org/pdf/1904.08653)
 
   [Adversarial T-shirt! Evading Person Detectors in A Physical World](https://arxiv.org/pdf/1910.11099)
+
+  [Universal Physical Camouflage Attacks on Object Detectors](https://arxiv.org/pdf/1909.04326)
   
 - **Реализация универсальных атак уклонения**<br>
 
@@ -28,4 +35,8 @@
   [Robust Physical-World Attacks on Deep Learning Visual Classification](https://arxiv.org/pdf/1707.08945)
 
   [Physical Adversarial Examples for Object Detectors](https://arxiv.org/pdf/1807.07769)
+
+  [Universal adversarial perturbations](https://arxiv.org/pdf/1610.08401)
+
+  [ShapeShifter: Robust Physical Adversarial Attack on Faster R-CNN Object Detector](https://arxiv.org/pdf/1804.05810)
   
