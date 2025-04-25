@@ -70,3 +70,15 @@ def to_array(tensor):
     arr = arr_.permute(1, 2, 0).detach().numpy() * 255
     arr = np.clip(arr, 0, 255).astype(np.uint8)
     return arr
+
+def to_array_new(tensor):
+    tensor_ = tensor.squeeze(0).cpu()
+    denormalize = Normalize(
+        mean=[-0.485 / 0.229, -0.456 / 0.224, -0.406 / 0.225],
+        std=[1 / 0.229, 1 / 0.224, 1 / 0.225]
+    )
+    tensor_ = denormalize(tensor_)
+    tensor_ = torch.clamp(tensor_, 0, 1)
+    arr = tensor_.permute(1, 2, 0).detach().numpy()
+    arr = (arr * 255).astype(np.uint8)
+    return arr
