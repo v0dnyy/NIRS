@@ -10,11 +10,8 @@ def predict_image_class(image_path):
     preprocess = weights.transforms()
     img = decode_image(image_path)
     batch = preprocess(img).unsqueeze(0)
-
-    # Step 4: Use the model to make a prediction
-    with torch.no_grad():  # Disable gradient calculation for inference
+    with torch.no_grad():
         prediction = model(batch).squeeze(0).softmax(0)
-
     class_id = prediction.argmax().item()
     score = prediction[class_id].item()
     category_name = weights.meta["categories"][class_id]
