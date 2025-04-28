@@ -80,3 +80,17 @@ class PersonDataset(Dataset):
         else:
             padded_lab = lab
         return padded_lab
+
+
+class CachedPersonDataset(PersonDataset):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.cache = {}
+
+    def __getitem__(self, index):
+        if index in self.cache:
+            return self.cache[index]
+
+        data = super().__getitem__(index)
+        self.cache[index] = data
+        return data
