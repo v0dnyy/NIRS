@@ -63,18 +63,18 @@ def train(device, img_dir, lab_dir, batch_size, epochs_num, max_labels, model):
         ep_total_variation_loss = ep_total_variation_loss / len(train_loader)
         ep_loss = ep_loss / len(train_loader)
 
-        img = torchvision.transforms.ToPILImage('RGB')(adv_patch)
-        img.show()
-        img.save("/Users/vodnyy/PycharmProjects/NIRS/adversarial/patch.png")
+    img = torchvision.transforms.ToPILImage('RGB')(adv_patch)
+    img.show()
+    img.save("/home/vodnyy/NIRS/adversarial/patch.png")
 
 
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True, autoshape=False).eval()
-    train_img_dir = '/Users/vodnyy/PycharmProjects/NIRS/adversarial/dataset/train/images'
-    train_labels_dir = '/Users/vodnyy/PycharmProjects/NIRS/adversarial/dataset/train/labels'
+    train_img_dir = '/home/vodnyy/NIRS/adversarial/dataset/train/images' 
+    train_labels_dir = '/home/vodnyy/NIRS/adversarial/dataset/train/labels'
     batch_size = 16
-    epochs_num = 1
+    epochs_num = 100
     max_labels = 25
     train(device, train_img_dir, train_labels_dir, batch_size, epochs_num, max_labels, model)
 
