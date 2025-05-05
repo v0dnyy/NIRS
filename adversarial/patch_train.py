@@ -9,12 +9,12 @@ import torch
 
 def train(device, img_dir, lab_dir, batch_size, epochs_num, max_labels, model):
     start_learning_rate = 0.03
-    adv_patch = patch_utils.generate_patch(32, device).requires_grad_(True)
+    adv_patch = patch_utils.generate_patch(300, device).requires_grad_(True)
     train_loader = torch.utils.data.DataLoader(PersonDataset(img_dir, lab_dir, max_labels, 640,
                                                              shuffle=True),
                                                batch_size=batch_size,
                                                shuffle=True,
-                                               num_workers=10)
+                                               num_workers=4)
     epoch_length = len(train_loader)
     print(f'One epoch is {len(train_loader)}')
     scheduler_factory = lambda x: optim.lr_scheduler.ReduceLROnPlateau(x, 'min', patience=50)
@@ -65,7 +65,7 @@ def train(device, img_dir, lab_dir, batch_size, epochs_num, max_labels, model):
 
     img = torchvision.transforms.ToPILImage('RGB')(adv_patch)
     img.show()
-    img.save("/home/vodnyy/NIRS/adversarial/patch.png")
+    img.save(f"/home/vodnyy/NIRS/adversarial/patch_e_{epochs_num}_b_{batch_size}.png")
 
 
 def main():
@@ -73,9 +73,9 @@ def main():
     model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True, autoshape=False).eval()
     train_img_dir = '/home/vodnyy/NIRS/adversarial/dataset/train/images' 
     train_labels_dir = '/home/vodnyy/NIRS/adversarial/dataset/train/labels'
-    batch_size = 16
-    epochs_num = 100
-    max_labels = 25
+    batch_size = 8
+    epochs_num = 1000
+    max_labels = 24
     train(device, train_img_dir, train_labels_dir, batch_size, epochs_num, max_labels, model)
 
 
