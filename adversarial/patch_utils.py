@@ -70,11 +70,12 @@ def transform_patch(device, adv_patch, lab_batch, img_size, do_rotate=True, rand
     adv_batch = adv_batch * contrast + brightness + noise
     adv_batch = torch.clamp(adv_batch, 1e-6, 0.99999)
 
-    # Создание маски по классам (где class_id == 1 — патч не нужен)
-    cls_ids = lab_batch.narrow(2, 0, 1)
-    cls_mask = cls_ids.expand(-1, -1, 3).unsqueeze(-1).unsqueeze(-1)
-    cls_mask = cls_mask.expand(-1, -1, -1, adv_batch.size(3), adv_batch.size(4)).float()
-    msk_batch = 1.0 - cls_mask
+    # Создание маски: патч применяется только к class_id == 0
+    cls_ids = lab_batch.narrow(2, 0, 1) 
+    cls_mask = (cls_ids == 0).float()  
+    cls_mask = cls_mask.expand(-1, -1, 3).unsqueeze(-1).unsqueeze(-1)  
+    cls_mask = cls_mask.expand(-1, -1, -1, adv_batch.size(3), adv_batch.size(4))
+    msk_batch = cls_mask
 
     # Паддинг
     mypad = nn.ConstantPad2d((int(pad + 0.5), int(pad), int(pad + 0.5), int(pad)), 0)
