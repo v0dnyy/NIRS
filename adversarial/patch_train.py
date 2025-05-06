@@ -73,8 +73,8 @@ def main():
     model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True, autoshape=False).eval()
     train_img_dir = '/home/vodnyy/NIRS/adversarial/dataset/train/images' 
     train_labels_dir = '/home/vodnyy/NIRS/adversarial/dataset/train/labels'
-    batch_size = 8
-    epochs_num = 1000
+    batch_size = 16
+    epochs_num = 1500
     max_labels = 24
     train(device, train_img_dir, train_labels_dir, batch_size, epochs_num, max_labels, model)
 
