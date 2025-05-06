@@ -1,6 +1,6 @@
 import cv2
 import torch
-import numpy as np
+import os
 
 
 def run_yolov5_webcam_detection(conf_threshold=0.5):
@@ -35,7 +35,7 @@ def run_yolov5_webcam_detection(conf_threshold=0.5):
                 label = f"{row['name']} {row['confidence']:.2f}"
                 cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
-            cv2.imshow('YOLOv5 Webcam Detection', frame)
+            cv2.imshow('YOLOv5 PyTorch', frame)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
@@ -43,9 +43,10 @@ def run_yolov5_webcam_detection(conf_threshold=0.5):
         cap.release()
         cv2.destroyAllWindows()
 
-
-if __name__ == '__main__':
-    import os
-
+def main():
     os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
     run_yolov5_webcam_detection(conf_threshold=0.6)
+
+
+if __name__ == '__main__':
+    main()
