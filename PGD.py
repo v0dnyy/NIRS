@@ -2,7 +2,7 @@ import torch
 import torchvision.models as models
 import torch.nn as nn
 import matplotlib.pyplot as plt
-from utils import save_img, to_array, process_img, download_img
+from my_utils import save_img, to_array, process_img, download_img
 
 
 def pgd(model, img_tensor, eps, alpha, num_iter, device):

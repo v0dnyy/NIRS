@@ -1,7 +1,7 @@
 import torch
 import pandas as pd
 import numpy as np
-from utils import read_img, evaluate_model
+from my_utils import read_img, evaluate_model
 import torchvision.models as models
 from torch.utils.data import Subset, DataLoader, TensorDataset
 from sklearn.model_selection import train_test_split

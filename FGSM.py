@@ -2,7 +2,7 @@ import torch
 import torchvision.models as models
 import torch.nn as nn
 import matplotlib.pyplot as plt
-from utils import save_img, to_array, process_img, download_img
+from my_utils import save_img, to_array, process_img, download_img
 
 
 def fgsm(model, img_tensor, eps):

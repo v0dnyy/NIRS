@@ -7,7 +7,7 @@ import numpy as np
 
 from p_utils import init_patch, mask_generation, test_patch
 from load_ds import load_train_teat_data
-from utils import evaluate_model, read_img, to_array
+from my_utils import evaluate_model, read_img, to_array
 
 
 def patch_attack(device, image, applied_patch, mask, target_label, probability_threshold, model, lr=1e-1,

@@ -3,7 +3,7 @@ import torchvision.models as models
 import torch.nn as nn
 import matplotlib.pyplot as plt
 import numpy as np
-from utils import save_img, to_array, process_img, download_img
+from my_utils import save_img, to_array, process_img, download_img
 
 
 def deepfool(model, img_tensor, eps, num_iter, device):

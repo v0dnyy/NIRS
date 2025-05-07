@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from matplotlib import pyplot as plt
 
-from utils import to_array
+from my_utils import to_array
 
 
 def init_patch(patch_type, image_size, noise_percentage):
