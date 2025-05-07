@@ -7,8 +7,70 @@ import torch.nn.functional as F
 import median_pool
 
 
-def generate_patch(patch_size, device):
-    return torch.rand((3, patch_size, patch_size)).to(device)
+def generate_patch(patch_size, device, mode):
+    if mode == "gray":
+        return torch.full((3, patch_size, patch_size), 0.5).to(device)
+    if mode == "rand":
+        return torch.rand((3, patch_size, patch_size)).to(device)
+
+
+def create_print_ability_tensor(patch_side):
+    # Набор триплетов для оптимальной печати патча
+    printable_rgb_triplets = [
+        [0.10, 0.10, 0.10],  # Чёрный (90% насыщенности)
+        [0.20, 0.20, 0.20],  # Тёмно-серый
+        [0.05, 0.05, 0.15],  # Тёмно-синий
+        [0.15, 0.05, 0.05],  # Тёмно-красный
+        [0.07, 0.10, 0.07],  # Тёмно-зелёный
+        [0.70, 0.10, 0.10],  # Насыщенный красный
+        [0.90, 0.30, 0.30],  # Светло-красный
+        [0.80, 0.20, 0.50],  # Пурпурный
+        [0.95, 0.50, 0.50],  # Пастельно-розовый
+        [0.20, 0.50, 0.20],  # Травяной зелёный
+        [0.40, 0.70, 0.30],  # Салатовый
+        [0.10, 0.30, 0.10],  # Тёмно-зелёный
+        [0.60, 0.80, 0.50],  # Мятный
+        [0.10, 0.10, 0.60],  # Тёмно-синий
+        [0.30, 0.30, 0.90],  # Ярко-синий
+        [0.50, 0.70, 0.90],  # Голубой
+        [0.20, 0.50, 0.70],  # Морская волна
+        [0.90, 0.80, 0.10],  # Золотистый
+        [0.95, 0.60, 0.10],  # Оранжевый
+        [0.80, 0.70, 0.20],  # Горчичный
+        [0.50, 0.20, 0.70],  # Фиолетовый
+        [0.70, 0.40, 0.80],  # Лавандовый
+        [0.40, 0.30, 0.10],  # Коричневый
+        [0.60, 0.40, 0.20],  # Терракота
+        [0.95, 0.95, 0.95],  # Белый (5% серого)
+        [0.90, 0.90, 0.80],  # Кремовый
+        [0.70, 0.80, 0.90],  # Светло-голубой
+        [0.90, 0.70, 0.70],  # Розовый песок
+        [0.85, 0.10, 0.10],  # Epson Red
+        [0.10, 0.60, 0.20],  # Canon Green
+        [0.20, 0.20, 0.80]  # HP Blue
+    ]
+    color_array = np.array(printable_rgb_triplets, dtype=np.float32)
+    print_ability_tensors = []
+    for color in color_array:
+        color_tensor = np.tile(
+            color.reshape(3, 1, 1),  # Исходный цвет [3] -> [3, 1, 1]
+            (1, patch_side, patch_side)  # Размножаем по spatial-размерностям
+        )
+        print_ability_tensors.append(color_tensor)
+
+    print_ability_array = np.stack(print_ability_tensors, axis=0)
+
+    return torch.from_numpy(print_ability_array)
+
+
+def calc_nps(patch, print_ability_tensor):
+    c_dist = (patch - print_ability_tensor + 0.000001) ** 2
+    c_dist = torch.sum(c_dist, 1) + 0.000001
+    c_dist = torch.sqrt(c_dist)
+    c_dist_min = torch.min(c_dist, 0)[0]
+    nps_score = torch.sum(c_dist_min)
+    return nps_score / torch.numel(patch)
+
 
 
 def calc_total_variation(patch):
@@ -33,8 +95,9 @@ def max_prob_extraction(model_outputs, cls_id, num_cls):
         cls_output = output[..., 5:5 + num_cls]
         cls_probs = torch.softmax(cls_output, dim=2)
         target_cls_probs = cls_probs[..., cls_id]
-        combined_probs = obj_scores  # * target_cls_probs #use only obj_scores
-        max_probs, max_probs_idx = combined_probs.max(dim=1)
+        combined_probs = obj_scores * target_cls_probs
+
+        max_probs, _ = combined_probs.max(dim=1)
         batch_probs.append(max_probs)
 
     final_probs = torch.stack(batch_probs).max(dim=0).values
@@ -71,9 +134,9 @@ def transform_patch(device, adv_patch, lab_batch, img_size, do_rotate=True, rand
     adv_batch = torch.clamp(adv_batch, 1e-6, 0.99999)
 
     # Создание маски: патч применяется только к class_id == 0
-    cls_ids = lab_batch.narrow(2, 0, 1) 
-    cls_mask = (cls_ids == 0).float()  
-    cls_mask = cls_mask.expand(-1, -1, 3).unsqueeze(-1).unsqueeze(-1)  
+    cls_ids = lab_batch.narrow(2, 0, 1)
+    cls_mask = (cls_ids == 0).float()
+    cls_mask = cls_mask.expand(-1, -1, 3).unsqueeze(-1).unsqueeze(-1)
     cls_mask = cls_mask.expand(-1, -1, -1, adv_batch.size(3), adv_batch.size(4))
     msk_batch = cls_mask
 
@@ -151,9 +214,10 @@ def apply_patch_to_img_batch(img_batch, adv_batch):
 
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    adv_img = generate_patch(32, device)
-    # img_size = 640
-    pass
+    adv_img = generate_patch(300, device, "gray")
+    loaded_tensor = torch.load("./print_ability_tensor.pt").requires_grad_(False)
+    img_size = 640
+    nps = calc_nps(adv_img, loaded_tensor)
 
 
 if __name__ == '__main__':

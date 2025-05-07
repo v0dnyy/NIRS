@@ -12,12 +12,12 @@ model = torch.hub.load('ultralytics/yolov5', 'yolov5s').eval()
 
 path_img = "../adversarial/for_test.jpg"
 img = Image.open(path_img).convert("RGB")
-path_patch = "../adversarial/patch_e_1500_b_16_tv_2.png"
+path_patch = "noisy_patch/patch_e_1500_b_16_tv_2.png"
 patch = Image.open(path_patch).convert("RGB")
 with torch.no_grad():
     results = model(img)
 results.show()
-results.save()
+# results.save()
 
 p_img = img.copy()
 boxes = results.xyxy[0].numpy()  # [xmin, ymin, xmax, ymax, confidence, class]
@@ -33,12 +33,12 @@ p_img.paste(resized_patch, (int(boxes[0][0]), int(boxes[0][3] // 4.7)))
 with torch.no_grad():
     results_1 = model(p_img)
 results_1.show()
-results_1.save()
+# results_1.save()
 
 to_pil = transforms.ToPILImage()
-noise = to_pil(patch_utils.generate_patch(target_w, 'cpu'))
+noise = to_pil(patch_utils.generate_patch(target_w, 'cpu', "gray"))
 img.paste(noise, (int(boxes[0][0]), int(boxes[0][3] // 4.7)))
 with torch.no_grad():
     results_2 = model(img)
 results_2.show()
-results_2.save()
+# results_2.save()

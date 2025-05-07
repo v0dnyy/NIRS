@@ -1,71 +1,98 @@
+import time
 from torch import optim
+from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 import torch
+from torch.amp import autocast, GradScaler
+import os
+from datetime import datetime
 import torchvision
 import patch_utils
 from dataset import PersonDataset
-import torch
 
 
-def train(device, img_dir, lab_dir, batch_size, epochs_num, max_labels, model):
-    start_learning_rate = 0.03
-    adv_patch = patch_utils.generate_patch(300, device).requires_grad_(True)
-    train_loader = torch.utils.data.DataLoader(PersonDataset(img_dir, lab_dir, max_labels, 640,
+def train(device, img_dir, labels_dir, patch_size, patch_mode, batch_size, epochs_num, max_labels, model, nps_coef,
+          tv_coef):
+    scaler = GradScaler(device=device.type)
+    log_dir = os.path.join("../adversarial/logs", datetime.now().strftime("%d.%m.%Y-%H:%M:%S"))
+    writer = SummaryWriter(log_dir=log_dir)
+    start_learning_rate = 0.05
+    adv_patch = patch_utils.generate_patch(patch_size, device, patch_mode).requires_grad_(True)
+    print_ability_tensor = patch_utils.create_print_ability_tensor(patch_size)
+    train_loader = torch.utils.data.DataLoader(PersonDataset(img_dir, labels_dir, max_labels, 640,
                                                              shuffle=True),
                                                batch_size=batch_size,
                                                shuffle=True,
-                                               num_workers=4)
+                                               num_workers=4,
+                                               pin_memory=True if device.type == 'cuda' else False)
     epoch_length = len(train_loader)
-    print(f'One epoch is {len(train_loader)}')
-    scheduler_factory = lambda x: optim.lr_scheduler.ReduceLROnPlateau(x, 'min', patience=50)
     optimizer = optim.Adam([adv_patch], lr=start_learning_rate, amsgrad=True)
-    scheduler = scheduler_factory(optimizer)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=10)
     for epoch in range(epochs_num):
-        ep_detection_loss = 0
-        ep_total_variation_loss = 0
-        ep_loss = 0
+        epoch_start_time = time.time()
+        epoch_detection_loss = 0
+        epoch_nps_loss = 0
+        epoch_total_variation_loss = 0
+        epoch_loss = 0
         for i_batch, (img_batch, label_batch) in tqdm(enumerate(train_loader), desc=f'Running epoch {epoch}',
-                                                    total=epoch_length):
-            # with torch.autograd.detect_anomaly():
-                img_batch = img_batch.to(device)
-                label_batch = label_batch.to(device)
-                adv_patch = adv_patch.to(device)
-                adv_batch_transformed = patch_utils.transform_patch(device, adv_patch, label_batch, 640, do_rotate=True, rand_loc=False)
-                p_img_batch = patch_utils.apply_patch_to_img_batch(img_batch, adv_batch_transformed)
+                                                      total=epoch_length):
+            optimizer.zero_grad()
+            img_batch = img_batch.to(device)
+            label_batch = label_batch.to(device)
 
+            with autocast(device_type=device.type, dtype=torch.float16):
+                adv_batch_transformed = patch_utils.transform_patch(device, adv_patch, label_batch, 640, do_rotate=True,
+                                                                    rand_loc=False)
+                p_img_batch = patch_utils.apply_patch_to_img_batch(img_batch, adv_batch_transformed)
                 # img = p_img_batch[1, :, :]
                 # img = torchvision.transforms.ToPILImage('RGB')(img.detach().cpu())
                 # img.show()
-
                 raw_outputs = model(p_img_batch)
+
                 max_prob = patch_utils.max_prob_extraction(raw_outputs[1], 0, 80)
                 total_variation = patch_utils.calc_total_variation(adv_patch)
-                total_variation_loss = total_variation * 2.5
+                nps = patch_utils.calc_nps(adv_patch, print_ability_tensor)
+
+                nps_loss = nps * nps_coef
+                total_variation_loss = total_variation * tv_coef
                 detection_loss = max_prob.mean()
-                loss = detection_loss + torch.max(total_variation_loss, torch.tensor(0.1).to(device))
-                ep_detection_loss += detection_loss.detach().cpu().numpy()
-                ep_total_variation_loss += total_variation_loss.detach().cpu().numpy()
-                ep_loss += loss
+                loss = detection_loss + nps_loss + torch.max(total_variation_loss, torch.tensor(0.1).to(device))
 
-                loss.backward()
-                optimizer.step()
-                optimizer.zero_grad()
-                adv_patch.data.clamp_(0, 1)
+            epoch_detection_loss += detection_loss.item()
+            epoch_total_variation_loss += total_variation_loss.item()
+            epoch_nps_loss += nps_loss.item()
+            epoch_loss += loss.item()
 
-                if i_batch + 1 >= len(train_loader):
-                    pass
-                else:
-                    del adv_batch_transformed, p_img_batch, raw_outputs, max_prob, detection_loss, total_variation_loss, loss
-                    if device.type == 'cuda':
-                        torch.cuda.empty_cache()
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
 
-        ep_detection_loss = ep_detection_loss / len(train_loader)
-        ep_total_variation_loss = ep_total_variation_loss / len(train_loader)
-        ep_loss = ep_loss / len(train_loader)
+            adv_patch.data.clamp_(0, 1)
 
+            del adv_batch_transformed, p_img_batch, raw_outputs, max_prob, detection_loss, nps_loss, total_variation_loss, loss
+            if device.type == 'cuda':
+                torch.cuda.empty_cache()
+
+        epoch_detection_loss = epoch_detection_loss / len(train_loader)
+        epoch_nps_loss = epoch_nps_loss / len(train_loader)
+        epoch_total_variation_loss = epoch_total_variation_loss / len(train_loader)
+        epoch_loss = epoch_loss / len(train_loader)
+        epoch_time = time.time() - epoch_start_time
+
+        writer.add_scalar('epoch/total_loss', epoch_loss, epoch)
+        writer.add_scalar('epoch/detection_loss', epoch_detection_loss, epoch)
+        writer.add_scalar('epoch/nps_loss', epoch_nps_loss, epoch)
+        writer.add_scalar('epoch/tv_loss', epoch_total_variation_loss, epoch)
+        writer.add_scalar('epoch/lr', optimizer.param_groups[0]['lr'], epoch)
+        writer.add_scalar('epoch/time', epoch_time, epoch)
+        writer.add_image('epoch/patch', adv_patch, epoch)
+
+        scheduler.step(epoch_loss)
+
+    writer.close()
     img = torchvision.transforms.ToPILImage('RGB')(adv_patch)
-    img.show()
-    img.save(f"../adversarial/patch_e_{epochs_num}_b_{batch_size}.png")
+    # img.show()
+    img.save(f"../adversarial/patch_e_{epochs_num}_b_{batch_size}_tv_{tv_coef}_nps_{nps_coef}.png")
 
 
 def main():
@@ -76,7 +103,21 @@ def main():
     batch_size = 8
     epochs_num = 1
     max_labels = 24
-    train(device, train_img_dir, train_labels_dir, batch_size, epochs_num, max_labels, model)
+    patch_size = 32
+    patch_mode = "gray"
+    train(
+        device=device,
+        img_dir=train_img_dir,
+        labels_dir=train_labels_dir,
+        patch_size=patch_size,
+        patch_mode=patch_mode,
+        batch_size=batch_size,
+        epochs_num=epochs_num,
+        max_labels=max_labels,
+        model=model,
+        nps_coef=0.01,
+        tv_coef=2.5,
+    )
 
 
 if __name__ == '__main__':
