@@ -18,7 +18,7 @@ def train(device, img_dir, labels_dir, patch_size, patch_mode, batch_size, epoch
     writer = SummaryWriter(log_dir=log_dir)
     start_learning_rate = 0.05
     adv_patch = patch_utils.generate_patch(patch_size, device, patch_mode).requires_grad_(True)
-    print_ability_tensor = patch_utils.create_print_ability_tensor(patch_size)
+    print_ability_tensor = patch_utils.create_print_ability_tensor(patch_size).to(device)
     train_loader = torch.utils.data.DataLoader(PersonDataset(img_dir, labels_dir, max_labels, 640,
                                                              shuffle=True),
                                                batch_size=batch_size,
