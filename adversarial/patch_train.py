@@ -14,7 +14,7 @@ from dataset import PersonDataset
 def train(device, img_dir, labels_dir, patch_size, patch_mode, batch_size, epochs_num, max_labels, model, nps_coef,
           tv_coef):
     scaler = GradScaler(device=device.type)
-    log_dir = os.path.join("../adversarial/logs", (f"e_{epochs_num}_b_{batch_size}_tv_{tv_coef}_nps_{nps_coef}" + datetime.now().strftime("%d.%m.%Y-%H:%M:%S")))
+    log_dir = os.path.join("../adversarial/logs", (f"e_{epochs_num}_b_{batch_size}_tv_{tv_coef}_nps_{nps_coef}" + datetime.now().strftime("%d.%m.%Y-%H.%M.%S")))
     writer = SummaryWriter(log_dir=log_dir)
     start_learning_rate = 0.05
     adv_patch = patch_utils.generate_patch(patch_size, device, patch_mode).requires_grad_(True)
