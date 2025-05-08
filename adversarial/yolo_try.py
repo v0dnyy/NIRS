@@ -12,7 +12,7 @@ model = torch.hub.load('ultralytics/yolov5', 'yolov5s').eval()
 
 path_img = "../adversarial/for_test.jpg"
 img = Image.open(path_img).convert("RGB")
-path_patch = "noisy_patch/patch_e_1500_b_16_tv_2.png"
+path_patch = "/Users/vodnyy/Downloads/paper.png"
 patch = Image.open(path_patch).convert("RGB")
 with torch.no_grad():
     results = model(img)
