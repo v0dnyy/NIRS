@@ -14,7 +14,7 @@ from dataset import PersonDataset
 def train(device, img_dir, labels_dir, patch_size, patch_mode, batch_size, epochs_num, max_labels, model, nps_coef,
           tv_coef):
     scaler = GradScaler(device=device.type)
-    log_dir = os.path.join("../adversarial/logs", datetime.now().strftime("%d.%m.%Y-%H:%M:%S"))
+    log_dir = os.path.join("../adversarial/logs", (f"e_{epochs_num}_b_{batch_size}_tv_{tv_coef}_nps_{nps_coef}" + datetime.now().strftime("%d.%m.%Y-%H:%M:%S")))
     writer = SummaryWriter(log_dir=log_dir)
     start_learning_rate = 0.05
     adv_patch = patch_utils.generate_patch(patch_size, device, patch_mode).requires_grad_(True)
@@ -101,9 +101,9 @@ def main():
     train_img_dir = '../adversarial/dataset/train/images'
     train_labels_dir = '../adversarial/dataset/train/labels'
     batch_size = 8
-    epochs_num = 1
+    epochs_num = 1000
     max_labels = 24
-    patch_size = 32
+    patch_size = 300
     patch_mode = "gray"
     train(
         device=device,
@@ -112,7 +112,20 @@ def main():
         patch_size=patch_size,
         patch_mode=patch_mode,
         batch_size=batch_size,
-        epochs_num=epochs_num,
+        epochs_num=1000,
+        max_labels=max_labels,
+        model=model,
+        nps_coef=0.01,
+        tv_coef=2.5,
+    )
+    train(
+        device=device,
+        img_dir=train_img_dir,
+        labels_dir=train_labels_dir,
+        patch_size=patch_size,
+        patch_mode=patch_mode,
+        batch_size=batch_size,
+        epochs_num=1500,
         max_labels=max_labels,
         model=model,
         nps_coef=0.01,
