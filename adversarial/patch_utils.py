@@ -91,12 +91,11 @@ def max_prob_extraction(model_outputs, cls_id, num_cls):
             anchors * grid_h * grid_w,
             5 + num_cls
         )
-        #obj_scores = torch.sigmoid(output[..., 4])
+        obj_scores = torch.sigmoid(output[..., 4])
         cls_output = output[..., 5:5 + num_cls]
         cls_probs = torch.softmax(cls_output, dim=2)
         target_cls_probs = cls_probs[..., cls_id]
-        #combined_probs = target_cls_probs * obj_scores
-        combined_probs = target_cls_probs
+        combined_probs = obj_scores #* target_cls_probs
 
         max_probs, _ = combined_probs.max(dim=1)
         batch_probs.append(max_probs)

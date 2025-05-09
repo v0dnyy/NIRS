@@ -14,7 +14,7 @@ from dataset import PersonDataset
 def train(device, img_dir, labels_dir, patch_size, patch_mode, batch_size, epochs_num, max_labels, model, nps_coef,
           tv_coef):
     scaler = GradScaler(device=device.type)
-    log_dir = os.path.join("../adversarial/logs", (f"e_{epochs_num}_b_{batch_size}_tv_{tv_coef}_nps_{nps_coef}" + datetime.now().strftime("%d.%m.%Y-%H.%M.%S")))
+    log_dir = os.path.join("../adversarial/logs", (f"obj_e_{epochs_num}_b_{batch_size}_tv_{tv_coef}_nps_{nps_coef}_" + datetime.now().strftime("%d.%m.%Y-%H.%M.%S")))
     writer = SummaryWriter(log_dir=log_dir)
     start_learning_rate = 0.05
     adv_patch = patch_utils.generate_patch(patch_size, device, patch_mode).requires_grad_(True)
@@ -78,7 +78,9 @@ def train(device, img_dir, labels_dir, patch_size, patch_mode, batch_size, epoch
         epoch_total_variation_loss = epoch_total_variation_loss / len(train_loader)
         epoch_loss = epoch_loss / len(train_loader)
         epoch_time = time.time() - epoch_start_time
-
+        if epoch in (999, 1249, 1499, 1749):
+            img = torchvision.transforms.ToPILImage('RGB')(adv_patch)
+            img.save(f"../adversarial/patch_obj_e_{epochs_num}_b_{batch_size}_tv_{tv_coef}_nps_{nps_coef}.png")
         writer.add_scalar('epoch/total_loss', epoch_loss, epoch)
         writer.add_scalar('epoch/detection_loss', epoch_detection_loss, epoch)
         writer.add_scalar('epoch/nps_loss', epoch_nps_loss, epoch)
@@ -92,7 +94,7 @@ def train(device, img_dir, labels_dir, patch_size, patch_mode, batch_size, epoch
     writer.close()
     img = torchvision.transforms.ToPILImage('RGB')(adv_patch)
     # img.show()
-    img.save(f"../adversarial/patch_e_{epochs_num}_b_{batch_size}_tv_{tv_coef}_nps_{nps_coef}.png")
+    img.save(f"../adversarial/patch_obj_e_{epochs_num}_b_{batch_size}_tv_{tv_coef}_nps_{nps_coef}.png")
 
 
 def main():
@@ -101,10 +103,10 @@ def main():
     train_img_dir = '../adversarial/dataset/train/images'
     train_labels_dir = '../adversarial/dataset/train/labels'
     batch_size = 8
-    epochs_num = 1000
+    epochs_num = 2000
     max_labels = 24
     patch_size = 300
-    patch_mode = "gray"
+    patch_mode = "rand"
     train(
         device=device,
         img_dir=train_img_dir,
@@ -112,24 +114,11 @@ def main():
         patch_size=patch_size,
         patch_mode=patch_mode,
         batch_size=batch_size,
-        epochs_num=1000,
+        epochs_num=epochs_num,
         max_labels=max_labels,
         model=model,
         nps_coef=0.01,
-        tv_coef=2.5,
-    )
-    train(
-        device=device,
-        img_dir=train_img_dir,
-        labels_dir=train_labels_dir,
-        patch_size=patch_size,
-        patch_mode=patch_mode,
-        batch_size=batch_size,
-        epochs_num=1500,
-        max_labels=max_labels,
-        model=model,
-        nps_coef=0.01,
-        tv_coef=2.5,
+        tv_coef=2.0,
     )
 
 
