@@ -42,7 +42,7 @@ def train(device, img_dir, labels_dir, patch_size, patch_mode, batch_size, epoch
 
             with autocast(device_type=device.type, dtype=torch.float16):
                 adv_batch_transformed = patch_utils.transform_patch(device, adv_patch, label_batch, 640, do_rotate=True,
-                                                                    rand_loc=False)
+                                                                    rand_loc=True)
                 p_img_batch = patch_utils.apply_patch_to_img_batch(img_batch, adv_batch_transformed)
                 # img = p_img_batch[1, :, :]
                 # img = torchvision.transforms.ToPILImage('RGB')(img.detach().cpu())
@@ -78,9 +78,7 @@ def train(device, img_dir, labels_dir, patch_size, patch_mode, batch_size, epoch
         epoch_total_variation_loss = epoch_total_variation_loss / len(train_loader)
         epoch_loss = epoch_loss / len(train_loader)
         epoch_time = time.time() - epoch_start_time
-        if epoch in (999, 1249, 1499, 1749):
-            img = torchvision.transforms.ToPILImage('RGB')(adv_patch)
-            img.save(f"../adversarial/patch_obj_e_{epochs_num}_b_{batch_size}_tv_{tv_coef}_nps_{nps_coef}.png")
+
         writer.add_scalar('epoch/total_loss', epoch_loss, epoch)
         writer.add_scalar('epoch/detection_loss', epoch_detection_loss, epoch)
         writer.add_scalar('epoch/nps_loss', epoch_nps_loss, epoch)
@@ -94,7 +92,7 @@ def train(device, img_dir, labels_dir, patch_size, patch_mode, batch_size, epoch
     writer.close()
     img = torchvision.transforms.ToPILImage('RGB')(adv_patch)
     # img.show()
-    img.save(f"../adversarial/patch_obj_e_{epochs_num}_b_{batch_size}_tv_{tv_coef}_nps_{nps_coef}.png")
+    img.save(f"../adversarial/patch_obj_rand_loc_e_{epochs_num}_b_{batch_size}_tv_{tv_coef}_nps_{nps_coef}.png")
 
 
 def main():
@@ -114,11 +112,50 @@ def main():
         patch_size=patch_size,
         patch_mode=patch_mode,
         batch_size=batch_size,
-        epochs_num=epochs_num,
+        epochs_num=1000,
         max_labels=max_labels,
         model=model,
         nps_coef=0.01,
-        tv_coef=2.0,
+        tv_coef=2.5,
+    )
+    train(
+        device=device,
+        img_dir=train_img_dir,
+        labels_dir=train_labels_dir,
+        patch_size=patch_size,
+        patch_mode=patch_mode,
+        batch_size=batch_size,
+        epochs_num=1500,
+        max_labels=max_labels,
+        model=model,
+        nps_coef=0.01,
+        tv_coef=2.5,
+    )
+    train(
+        device=device,
+        img_dir=train_img_dir,
+        labels_dir=train_labels_dir,
+        patch_size=patch_size,
+        patch_mode=patch_mode,
+        batch_size=batch_size,
+        epochs_num=1000,
+        max_labels=max_labels,
+        model=model,
+        nps_coef=0.02,
+        tv_coef=2.5,
+    )
+    train(
+        device=device,
+        img_dir=train_img_dir,
+        labels_dir=train_labels_dir,
+        patch_size=patch_size,
+        patch_mode=patch_mode,
+        batch_size=batch_size,
+        epochs_num=1500,
+        max_labels=max_labels,
+        model=model,
+        nps_coef=0.02,
+        tv_coef=2.5,
     )
 
 
