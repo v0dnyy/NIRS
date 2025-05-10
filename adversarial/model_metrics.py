@@ -1,8 +1,14 @@
 import torch
+import numpy as np
+import patch_utils
 from yolov5.utils.metrics import ap_per_class, box_iou
 from yolov5.utils.general import non_max_suppression, scale_boxes, check_dataset, xywh2xyxy
 from yolov5.utils.dataloaders import create_dataloader
-import numpy as np
+from PIL import Image
+from torchvision import transforms
+
+
+
 
 
 def filter_pred_by_classes(pred, selected_classes, device):
@@ -21,10 +27,14 @@ def filter_pred_by_classes(pred, selected_classes, device):
     return pred_filtered
 
 
-def evaluate_yolov5(model, data_path, conf_thres, iou_thres, device, selected_classes = None):
+def evaluate_yolov5(model, data_path, conf_thres, iou_thres, device, selected_classes = None, apply_patch = False, patch_path = None):
     model.eval()
     data = check_dataset(data_path)
     dataloader, dataset = create_dataloader(data['test'], imgsz=640, batch_size=8, stride=model.stride, rect=True, prefix='test: ')
+    if apply_patch:
+        patch_img = Image.open(patch_path).convert('RGB')
+        adv_patch = transforms.ToTensor()(patch_img).to(device)
+        img_size = 640
     iouv = torch.linspace(0.5, 0.95, 10).to(device)
     niou = iouv.numel()
     stats = []
@@ -32,6 +42,15 @@ def evaluate_yolov5(model, data_path, conf_thres, iou_thres, device, selected_cl
     for batch_i, (img, targets, paths, shapes) in enumerate(dataloader):
         img = img.to(device, non_blocking=True).float() / 255.0
         targets = targets.to(device)
+
+        if apply_patch:
+            batch_size = img.size(0)
+            lab_batch = patch_utils.targets_to_lab_batch(targets, batch_size, device)
+            adv_batch = patch_utils.patch_to_batch(device, adv_patch, lab_batch, img_size)
+            img = patch_utils.apply_patch_to_img_batch(img, adv_batch)
+            # p_img = img[1, :, :]
+            # p_img = transforms.ToPILImage('RGB')(p_img.detach().cpu())
+            # p_img.show()
 
         with torch.no_grad():
             pred = model(img)
@@ -132,12 +151,21 @@ def evaluate_yolov5(model, data_path, conf_thres, iou_thres, device, selected_cl
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     test_images_dir = "../adversarial/dataset/test/images"
-    conf_thres = 0.3
+    conf_thres = 0.5
     iou_thres = 0.5
     # model_p = torch.hub.load('../yolov5', 'yolov5s', source='local', pretrained=True).eval()
     model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True, autoshape=False)
-    metrics = evaluate_yolov5(model, '../adversarial/dataset/data.yaml', conf_thres, iou_thres, device)
-    print()
+    metrics = evaluate_yolov5(
+        model = model,
+        data_path = '../adversarial/dataset/data.yaml',
+        conf_thres = conf_thres,
+        iou_thres = iou_thres,
+        device = device,
+        selected_classes = [0],
+        apply_patch = False,
+        patch_path = "../adversarial/rand_init_only_obj/patch_obj_e_1500_b_8_tv_2.5_nps_0.01.png"
+    )
+    print("END")
 
 
 if __name__ == "__main__":

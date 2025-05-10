@@ -12,7 +12,7 @@ model = torch.hub.load('ultralytics/yolov5', 'yolov5s').eval()
 
 path_img = "../adversarial/for_test.jpg"
 img = Image.open(path_img).convert("RGB")
-path_patch = "/Users/vodnyy/Downloads/paper.png"
+path_patch = "../adversarial/patch_e_1500_b_8_tv_2.0_nps_0.01.png"
 patch = Image.open(path_patch).convert("RGB")
 with torch.no_grad():
     results = model(img)
@@ -20,7 +20,7 @@ results.show()
 # results.save()
 
 p_img = img.copy()
-boxes = results.xyxy[0].numpy()  # [xmin, ymin, xmax, ymax, confidence, class]
+boxes = results.xyxy[0].cpu().numpy()  # [xmin, ymin, xmax, ymax, confidence, class]
 target_w = int((boxes[0][2] - boxes[0][0]) - 300)
 center_x = int(boxes[0][0] + target_w // 2)
 target_h = int(boxes[0][3] - boxes[0][1])

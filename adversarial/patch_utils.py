@@ -72,7 +72,6 @@ def calc_nps(patch, print_ability_tensor):
     return nps_score / torch.numel(patch)
 
 
-
 def calc_total_variation(patch):
     diff_h = torch.sum(torch.abs(patch[:, :, 1:] - patch[:, :, :-1] + 0.000001), 0)
     diff_h = torch.sum(torch.sum(diff_h, 0), 0)
@@ -95,7 +94,7 @@ def max_prob_extraction(model_outputs, cls_id, num_cls):
         cls_output = output[..., 5:5 + num_cls]
         cls_probs = torch.softmax(cls_output, dim=2)
         target_cls_probs = cls_probs[..., cls_id]
-        combined_probs = obj_scores #* target_cls_probs
+        combined_probs = obj_scores  # * target_cls_probs
 
         max_probs, _ = combined_probs.max(dim=1)
         batch_probs.append(max_probs)
@@ -205,11 +204,86 @@ def transform_patch(device, adv_patch, lab_batch, img_size, do_rotate=True, rand
     return adv_batch_t * msk_batch_t
 
 
+def patch_to_batch(device, adv_patch, lab_batch, img_size):
+    padding = (img_size - adv_patch.size(-1)) / 2
+    adv_patch = adv_patch.unsqueeze(0)
+    adv_batch = adv_patch.expand(lab_batch.size(0), lab_batch.size(1), -1, -1, -1)
+    batch_size = torch.Size((lab_batch.size(0), lab_batch.size(1)))
+
+    # Создание маски: патч применяется только к class_id == 0
+    cls_ids = lab_batch.narrow(2, 0, 1)
+    cls_mask = (cls_ids == 0).float()
+    cls_mask = cls_mask.expand(-1, -1, 3).unsqueeze(-1).unsqueeze(-1)
+    cls_mask = cls_mask.expand(-1, -1, -1, adv_batch.size(3), adv_batch.size(4))
+    msk_batch = cls_mask
+
+    # Паддинг
+    mypad = nn.ConstantPad2d((int(padding + 0.5), int(padding), int(padding + 0.5), int(padding)), 0)
+    adv_batch = mypad(adv_batch)
+    msk_batch = mypad(msk_batch)
+
+    # Подготовка к аффинному преобразованию
+    anglesize = lab_batch.size(0) * lab_batch.size(1)
+    angle = torch.zeros(anglesize, device=device, dtype=torch.float32)
+
+    current_patch_size = adv_patch.size(-1)
+    lab_batch_scaled = torch.zeros_like(lab_batch, device=device, dtype=torch.float32)
+    lab_batch_scaled[:, :, 1] = lab_batch[:, :, 1] * img_size
+    lab_batch_scaled[:, :, 2] = lab_batch[:, :, 2] * img_size
+    lab_batch_scaled[:, :, 3] = lab_batch[:, :, 3] * img_size
+    lab_batch_scaled[:, :, 4] = lab_batch[:, :, 4] * img_size
+
+    target_size = torch.sqrt((lab_batch_scaled[:, :, 3] * 0.2) ** 2 + (lab_batch_scaled[:, :, 4] * 0.2) ** 2)
+
+    target_x = lab_batch[:, :, 1].view(np.prod(batch_size))
+    target_y = lab_batch[:, :, 2].view(np.prod(batch_size))
+
+    target_y = target_y - 0.05
+    scale = (target_size / current_patch_size).reshape(anglesize)
+
+    s = adv_batch.size()
+    adv_batch = adv_batch.view(s[0] * s[1], s[2], s[3], s[4])
+    msk_batch = msk_batch.view(s[0] * s[1], s[2], s[3], s[4])
+
+    tx = (-target_x + 0.5) * 2
+    ty = (-target_y + 0.5) * 2
+
+    # Матрица аффинного преобразования с поворотом и масштабом
+    theta = torch.zeros(anglesize, 2, 3, device=device, dtype=torch.float32)
+    theta[:, 0, 0] = 1 / scale
+    theta[:, 1, 1] = 1 / scale
+    theta[:, 0, 2] = tx / scale
+    theta[:, 1, 2] = ty / scale
+
+    grid = F.affine_grid(theta, adv_batch.shape, align_corners=False)
+    adv_batch_t = F.grid_sample(adv_batch, grid, align_corners=False)
+    msk_batch_t = F.grid_sample(msk_batch, grid, align_corners=False)
+
+    adv_batch_t = adv_batch_t.view(s[0], s[1], s[2], s[3], s[4])
+    msk_batch_t = msk_batch_t.view(s[0], s[1], s[2], s[3], s[4])
+
+    adv_batch_t = torch.clamp(adv_batch_t, 1e-6, 0.999999)
+
+    return adv_batch_t * msk_batch_t
+
+
 def apply_patch_to_img_batch(img_batch, adv_batch):
     advs = torch.unbind(adv_batch, 1)
     for adv in advs:
         img_batch = torch.where((adv == 0), img_batch, adv)
     return img_batch
+
+
+def targets_to_lab_batch(targets, batch_size, device):
+    objects_per_image = [targets[targets[:, 0] == i] for i in range(batch_size)]
+    max_objects = max([objs.size(0) for objs in objects_per_image])
+    lab_batch = torch.zeros(batch_size, max_objects, 5, device=device, dtype=targets.dtype)
+    for i, objs in enumerate(objects_per_image):
+        if objs.size(0) > 0:
+            lab_batch[i, :objs.size(0), 0] = objs[:, 1]  # class_id
+            lab_batch[i, :objs.size(0), 1:] = objs[:, 2:6]  # x,y,w,h
+    return lab_batch
+
 
 
 def main():
