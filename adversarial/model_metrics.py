@@ -30,7 +30,7 @@ def filter_pred_by_classes(pred, selected_classes, device):
 def evaluate_yolov5(model, data_path, conf_thres, iou_thres, device, selected_classes = None, apply_patch = False, patch_path = None):
     model.eval()
     data = check_dataset(data_path)
-    dataloader, dataset = create_dataloader(data['test'], imgsz=640, batch_size=8, stride=model.stride, rect=True, prefix='test: ')
+    dataloader, dataset = create_dataloader(data['test'], imgsz=640, batch_size=8, stride=model.stride, rect=True, prefix='test: ', shuffle=True)
     if apply_patch:
         patch_img = Image.open(patch_path).convert('RGB')
         adv_patch = transforms.ToTensor()(patch_img).to(device)
