@@ -11,7 +11,7 @@ def generate_patch(patch_size, device, mode):
     if mode == "gray":
         return torch.full((3, patch_size, patch_size), 0.5).to(device)
     if mode == "rand":
-        return torch.rand((3, patch_size, patch_size)).to(device)
+        return torch.randn((3, patch_size, patch_size)).to(device)
 
 
 def create_print_ability_tensor(patch_side):
