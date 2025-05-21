@@ -1,6 +1,6 @@
-train: /Users/vodnyy/PycharmProjects/NIRS/adversarial/dataset/train/images
-val: /Users/vodnyy/PycharmProjects/NIRS/adversarial/dataset/valid/images
-test: /Users/vodnyy/PycharmProjects/NIRS/adversarial/dataset/test/images
+train: /Users/vodnyy/NIRS/NIRS/adversarial/dataset/train/images
+val: /Users/vodnyy/NIRS/NIRS/adversarial/dataset/test/images
+test: /Users/vodnyy/NIRS/NIRS/adversarial/dataset/test/images
 
 nc: 1
 names: ['person']
