@@ -12,9 +12,11 @@ from dataset import PersonDataset
 
 
 def train(device, img_dir, labels_dir, patch_size, patch_mode, batch_size, epochs_num, max_labels, model, nps_coef,
-          tv_coef, loss_mode, rand_loc = False):
+          tv_coef, loss_mode, rand_loc=False):
     scaler = GradScaler(device=device.type)
-    log_dir = os.path.join("../adversarial/logs", (f"loss_mode-{loss_mode}_patch_mode-{patch_mode}_{'rand_loc_' if rand_loc else ''}e-{epochs_num}_b-{batch_size}_tv-{tv_coef}_nps-{nps_coef}_" + datetime.now().strftime("%d.%m.%Y-%H.%M.%S")))
+    log_dir = os.path.join("../adversarial/logs", (
+                f"loss_mode-{loss_mode}_patch_mode-{patch_mode}_{'rand_loc_' if rand_loc else ''}e-{epochs_num}_b-{batch_size}_tv-{tv_coef}_nps-{nps_coef}_" + datetime.now().strftime(
+            "%d.%m.%Y-%H.%M.%S")))
     writer = SummaryWriter(log_dir=log_dir)
     start_learning_rate = 0.03
     adv_patch = patch_utils.generate_patch(patch_size, device, patch_mode).requires_grad_(True)
@@ -91,7 +93,8 @@ def train(device, img_dir, labels_dir, patch_size, patch_mode, batch_size, epoch
     writer.close()
     img = torchvision.transforms.ToPILImage('RGB')(adv_patch)
     # img.show()
-    img.save(f"../adversarial/patch_loss_mode-{loss_mode}_init-{patch_mode}_{'rand_loc_' if rand_loc else ''}e-{epochs_num}_b-{batch_size}_tv-{tv_coef}_nps-{nps_coef}.png")
+    img.save(
+        f"../adversarial/patch_loss_mode-{loss_mode}_init-{patch_mode}_{'rand_loc_' if rand_loc else ''}e-{epochs_num}_b-{batch_size}_tv-{tv_coef}_nps-{nps_coef}.png")
 
 
 def main():
@@ -100,24 +103,27 @@ def main():
     train_img_dir = '../adversarial/dataset/train/images'
     train_labels_dir = '../adversarial/dataset/train/labels'
     batch_size = 8
-    epochs_num = 2000
+    epochs_num = 1000
     max_labels = 24
     patch_size = 300
-    patch_mode = "rand"
-    train(
-        device=device,
-        img_dir=train_img_dir,
-        labels_dir=train_labels_dir,
-        patch_size=patch_size,
-        patch_mode=patch_mode,
-        batch_size=batch_size,
-        epochs_num=1000,
-        max_labels=max_labels,
-        model=model,
-        nps_coef=0.01,
-        tv_coef=2.5,
-        loss_mode = 'obj'
-    )
+    patch_mode = "gray"
+    l_nps = [0.01, 0.05, 0.1]
+    for l in l_nps:
+        train(
+            device=device,
+            img_dir=train_img_dir,
+            labels_dir=train_labels_dir,
+            patch_size=patch_size,
+            patch_mode=patch_mode,
+            batch_size=batch_size,
+            epochs_num=1000,
+            max_labels=max_labels,
+            model=model,
+            nps_coef=l,
+            tv_coef=2.5,
+            loss_mode='obj',
+            rand_loc=False
+        )
 
 
 if __name__ == '__main__':
