@@ -3,7 +3,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+import torchvision
+from yolov5.utils.general import xywh2xyxy
 import median_pool
 
 
@@ -81,26 +82,20 @@ def calc_total_variation(patch):
     return total_variation / torch.numel(patch)
 
 
-def max_prob_extraction(model_outputs, cls_id, num_cls):
-    batch_probs = []
-    for output in model_outputs:
-        batch, anchors, grid_h, grid_w, _ = output.shape
-        output = output.view(
-            batch,
-            anchors * grid_h * grid_w,
-            5 + num_cls
-        )
-        obj_scores = torch.sigmoid(output[..., 4])
-        cls_output = output[..., 5:5 + num_cls]
-        cls_probs = torch.softmax(cls_output, dim=2)
-        target_cls_probs = cls_probs[..., cls_id]
+def max_prob_extraction(model_outputs, cls_id, num_cls, loss_mode):
+    predict = non_max_suppression(prediction=model_outputs, classes=[cls_id])
+    obj_scores = torch.sigmoid(predict[..., 4])
+    cls_output = predict[..., 5:5 + num_cls]
+    cls_probs = torch.softmax(cls_output, dim=2)
+    target_cls_probs = cls_probs[..., cls_id]
+    if loss_mode == "obj":
         combined_probs = obj_scores  # * target_cls_probs
-
-        max_probs, _ = combined_probs.max(dim=1)
-        batch_probs.append(max_probs)
-
-    final_probs = torch.stack(batch_probs).max(dim=0).values
-    return final_probs
+    elif loss_mode == "cls":
+        combined_probs = target_cls_probs
+    elif loss_mode == "obj+cls":
+        combined_probs = obj_scores * target_cls_probs
+    max_loss, _ = torch.max(combined_probs, dim=1)
+    return max_loss
 
 
 def transform_patch(device, adv_patch, lab_batch, img_size, do_rotate=True, rand_loc=True):
@@ -284,6 +279,43 @@ def targets_to_lab_batch(targets, batch_size, device):
             lab_batch[i, :objs.size(0), 1:] = objs[:, 2:6]  # x,y,w,h
     return lab_batch
 
+
+def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=None, max_det=1000):
+    bs = prediction.shape[0]
+    max_wh = 7680
+    max_nms = 30000
+    output = torch.zeros(bs, max_det, prediction.shape[2], device=prediction.device, dtype=prediction.dtype)
+    for xi, x in enumerate(prediction):
+        x = x[x[..., 4] > conf_thres].clone()
+        if not x.shape[0]:
+            continue
+        conf_scores = x[:, 5:] * x[:, 4:5]
+        box = xywh2xyxy(x[:, :4])  # center_x, center_y, width, height) to (x1, y1, x2, y2)
+        i, j = (conf_scores > conf_thres).nonzero(as_tuple=False).T
+        x_nms = torch.cat((box[i], conf_scores[i, j, None], j[:, None].float()),
+                          1)  # Detections matrix (xyxy, conf, cls)
+        x_filtered = x[i].clone()
+        if classes is not None:
+            mask = (x_nms[:, 5:6] == torch.tensor(classes, device=x.device)).any(1)
+            x_nms = x_nms[mask].clone()
+            x_filtered = x_filtered[mask].clone()
+        if x_nms.numel() == 0 or x_filtered.numel() == 0:
+            continue
+        sort_idx = x_nms[:, 4].argsort(descending=True)[:max_nms]
+        x_nms = x_nms[sort_idx].clone()
+        x_filtered = x_filtered[sort_idx].clone()
+        c = x_nms[:, 5:6] * max_wh  # classes
+        boxes = x_nms[:, :4] + c
+        scores = x_nms[:, 4]
+        i = torchvision.ops.nms(boxes, scores, iou_thres)  # NMS
+        i = i[:max_det]  # limit detections
+        filtered_preds = x_filtered[i].clone()
+        filtered_preds = torch.cat([
+            filtered_preds[..., :5],
+            filtered_preds[..., 5:] / filtered_preds[..., 4:5]
+        ], dim=-1)
+        output[xi, :filtered_preds.shape[0]] = filtered_preds
+    return output
 
 
 def main():
