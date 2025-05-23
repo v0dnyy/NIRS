@@ -12,11 +12,11 @@ from dataset import PersonDataset
 
 
 def train(device, img_dir, labels_dir, patch_size, patch_mode, batch_size, epochs_num, max_labels, model, nps_coef,
-          tv_coef):
+          tv_coef, loss_mode, rand_loc = False):
     scaler = GradScaler(device=device.type)
-    log_dir = os.path.join("../adversarial/logs", (f"obj_e_{epochs_num}_b_{batch_size}_tv_{tv_coef}_nps_{nps_coef}_" + datetime.now().strftime("%d.%m.%Y-%H.%M.%S")))
+    log_dir = os.path.join("../adversarial/logs", (f"loss_mode-{loss_mode}_patch_mode-{patch_mode}_{'rand_loc_' if rand_loc else ''}e-{epochs_num}_b-{batch_size}_tv-{tv_coef}_nps-{nps_coef}_" + datetime.now().strftime("%d.%m.%Y-%H.%M.%S")))
     writer = SummaryWriter(log_dir=log_dir)
-    start_learning_rate = 0.05
+    start_learning_rate = 0.03
     adv_patch = patch_utils.generate_patch(patch_size, device, patch_mode).requires_grad_(True)
     print_ability_tensor = patch_utils.create_print_ability_tensor(patch_size).to(device)
     train_loader = torch.utils.data.DataLoader(PersonDataset(img_dir, labels_dir, max_labels, 640,
@@ -27,7 +27,7 @@ def train(device, img_dir, labels_dir, patch_size, patch_mode, batch_size, epoch
                                                pin_memory=True if device.type == 'cuda' else False)
     epoch_length = len(train_loader)
     optimizer = optim.Adam([adv_patch], lr=start_learning_rate, amsgrad=True)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=10)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=50)
     for epoch in range(epochs_num):
         epoch_start_time = time.time()
         epoch_detection_loss = 0
@@ -39,23 +39,22 @@ def train(device, img_dir, labels_dir, patch_size, patch_mode, batch_size, epoch
             optimizer.zero_grad()
             img_batch = img_batch.to(device)
             label_batch = label_batch.to(device)
-
             with autocast(device_type=device.type, dtype=torch.float16):
                 adv_batch_transformed = patch_utils.transform_patch(device, adv_patch, label_batch, 640, do_rotate=True,
-                                                                    rand_loc=True)
+                                                                    rand_loc=rand_loc)
                 p_img_batch = patch_utils.apply_patch_to_img_batch(img_batch, adv_batch_transformed)
                 # img = p_img_batch[1, :, :]
                 # img = torchvision.transforms.ToPILImage('RGB')(img.detach().cpu())
                 # img.show()
                 raw_outputs = model(p_img_batch)
 
-                max_prob = patch_utils.max_prob_extraction(raw_outputs[1], 0, 80)
+                max_prob = patch_utils.max_prob_extraction(raw_outputs[0], 0, 80, loss_mode)
                 total_variation = patch_utils.calc_total_variation(adv_patch)
                 nps = patch_utils.calc_nps(adv_patch, print_ability_tensor)
 
                 nps_loss = nps * nps_coef
                 total_variation_loss = total_variation * tv_coef
-                detection_loss = max_prob.mean()
+                detection_loss = max_prob.max()
                 loss = detection_loss + nps_loss + torch.max(total_variation_loss, torch.tensor(0.1).to(device))
 
             epoch_detection_loss += detection_loss.item()
@@ -92,12 +91,12 @@ def train(device, img_dir, labels_dir, patch_size, patch_mode, batch_size, epoch
     writer.close()
     img = torchvision.transforms.ToPILImage('RGB')(adv_patch)
     # img.show()
-    img.save(f"../adversarial/patch_obj_rand_loc_e_{epochs_num}_b_{batch_size}_tv_{tv_coef}_nps_{nps_coef}.png")
+    img.save(f"../adversarial/patch_loss_mode-{loss_mode}_init-{patch_mode}_{'rand_loc_' if rand_loc else ''}e-{epochs_num}_b-{batch_size}_tv-{tv_coef}_nps-{nps_coef}.png")
 
 
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True, autoshape=False).eval()
+    model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True, autoshape=False, force_reload=True).eval()
     train_img_dir = '../adversarial/dataset/train/images'
     train_labels_dir = '../adversarial/dataset/train/labels'
     batch_size = 8
@@ -117,45 +116,7 @@ def main():
         model=model,
         nps_coef=0.01,
         tv_coef=2.5,
-    )
-    train(
-        device=device,
-        img_dir=train_img_dir,
-        labels_dir=train_labels_dir,
-        patch_size=patch_size,
-        patch_mode=patch_mode,
-        batch_size=batch_size,
-        epochs_num=1500,
-        max_labels=max_labels,
-        model=model,
-        nps_coef=0.01,
-        tv_coef=2.5,
-    )
-    train(
-        device=device,
-        img_dir=train_img_dir,
-        labels_dir=train_labels_dir,
-        patch_size=patch_size,
-        patch_mode=patch_mode,
-        batch_size=batch_size,
-        epochs_num=1000,
-        max_labels=max_labels,
-        model=model,
-        nps_coef=0.02,
-        tv_coef=2.5,
-    )
-    train(
-        device=device,
-        img_dir=train_img_dir,
-        labels_dir=train_labels_dir,
-        patch_size=patch_size,
-        patch_mode=patch_mode,
-        batch_size=batch_size,
-        epochs_num=1500,
-        max_labels=max_labels,
-        model=model,
-        nps_coef=0.02,
-        tv_coef=2.5,
+        loss_mode = 'obj'
     )
 
 
