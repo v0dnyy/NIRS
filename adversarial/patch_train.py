@@ -107,23 +107,25 @@ def main():
     max_labels = 24
     patch_size = 300
     patch_mode = "gray"
-    l_nps = [0.01, 0.05, 0.1]
-    for l in l_nps:
-        train(
-            device=device,
-            img_dir=train_img_dir,
-            labels_dir=train_labels_dir,
-            patch_size=patch_size,
-            patch_mode=patch_mode,
-            batch_size=batch_size,
-            epochs_num=1000,
-            max_labels=max_labels,
-            model=model,
-            nps_coef=l,
-            tv_coef=2.5,
-            loss_mode='obj',
-            rand_loc=False
-        )
+    l_tvs = [1.5, 2.0, 3.0]
+    l_npses = [0.01, 0.05, 0.1]
+    for l_tv in l_tvs:
+        for l_nps in l_npses:
+            train(
+                device=device,
+                img_dir=train_img_dir,
+                labels_dir=train_labels_dir,
+                patch_size=patch_size,
+                patch_mode=patch_mode,
+                batch_size=batch_size,
+                epochs_num=1000,
+                max_labels=max_labels,
+                model=model,
+                nps_coef=l_nps,
+                tv_coef=l_tv,
+                loss_mode='cls',
+                rand_loc=False
+            )
 
 
 if __name__ == '__main__':
