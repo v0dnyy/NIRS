@@ -82,12 +82,10 @@ def calc_total_variation(patch):
     return total_variation / torch.numel(patch)
 
 
-def max_prob_extraction(model_outputs, cls_id, num_cls, loss_mode):
-    predict = non_max_suppression(prediction=model_outputs, classes=[cls_id])
-    obj_scores = torch.sigmoid(predict[..., 4])
+def max_prob_extraction(predict, cls_id, num_cls, loss_mode):
     cls_output = predict[..., 5:5 + num_cls]
-    cls_probs = torch.softmax(cls_output, dim=2)
-    target_cls_probs = cls_probs[..., cls_id]
+    target_cls_probs = cls_output[..., cls_id]
+    obj_scores = get_obj_scores_for_class(predict, target_cls_probs)
     if loss_mode == "obj":
         combined_probs = obj_scores  # * target_cls_probs
     elif loss_mode == "cls":
@@ -96,6 +94,19 @@ def max_prob_extraction(model_outputs, cls_id, num_cls, loss_mode):
         combined_probs = obj_scores * target_cls_probs
     max_loss, _ = torch.max(combined_probs, dim=1)
     return max_loss
+
+
+def get_obj_scores_for_class(predict, target_cls_probs, conf_thres=0.25):
+    obj_scores = predict[..., 4]
+
+    mask_1 = obj_scores > conf_thres
+    filtered_obj_scores_1 = obj_scores * mask_1.float()
+
+    combined_score = filtered_obj_scores_1 * target_cls_probs
+    mask_2 = combined_score > conf_thres
+    filtered_obj_scores_2 = filtered_obj_scores_1 * mask_2.float()
+
+    return filtered_obj_scores_2
 
 
 def transform_patch(device, adv_patch, lab_batch, img_size, do_rotate=True, rand_loc=True):
