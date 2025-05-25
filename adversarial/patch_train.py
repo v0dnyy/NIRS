@@ -29,7 +29,7 @@ def train(device, img_dir, labels_dir, patch_size, patch_mode, batch_size, epoch
                                                pin_memory=True if device.type == 'cuda' else False)
     epoch_length = len(train_loader)
     optimizer = optim.Adam([adv_patch], lr=start_learning_rate, amsgrad=True)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=50)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=25)
     for epoch in range(epochs_num):
         epoch_start_time = time.time()
         epoch_detection_loss = 0
@@ -106,26 +106,31 @@ def main():
     epochs_num = 1000
     max_labels = 24
     patch_size = 300
-    patch_mode = "gray"
-    l_tvs = [1.5, 2.0, 3.0]
+    loss_modes = ["obj","cls","obj+cls"]
+    rand_locs = [False, True]
+    patch_modes = ["gray", "rand"]
+    l_tvs = [1.5, 2.0, 2.5, 3.0]
     l_npses = [0.01, 0.05, 0.1]
-    for l_tv in l_tvs:
-        for l_nps in l_npses:
-            train(
-                device=device,
-                img_dir=train_img_dir,
-                labels_dir=train_labels_dir,
-                patch_size=patch_size,
-                patch_mode=patch_mode,
-                batch_size=batch_size,
-                epochs_num=1000,
-                max_labels=max_labels,
-                model=model,
-                nps_coef=l_nps,
-                tv_coef=l_tv,
-                loss_mode='cls',
-                rand_loc=False
-            )
+    for loss_mode in loss_modes:
+        for rand_loc in rand_locs:
+            for patch_mode in patch_modes:
+                for l_tv in l_tvs:
+                    for l_nps in l_npses:
+                        train(
+                            device=device,
+                            img_dir=train_img_dir,
+                            labels_dir=train_labels_dir,
+                            patch_size=patch_size,
+                            patch_mode=patch_mode,
+                            batch_size=batch_size,
+                            epochs_num=1000,
+                            max_labels=max_labels,
+                            model=model,
+                            nps_coef=l_nps,
+                            tv_coef=l_tv,
+                            loss_mode=loss_mode,
+                            rand_loc=rand_loc
+                        )
 
 
 if __name__ == '__main__':
